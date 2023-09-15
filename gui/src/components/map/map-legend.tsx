@@ -15,18 +15,54 @@ import {
 interface MapLegendPropsType {
   bsmColors: { [key: string]: string };
   laneColors: { [key: string]: string };
+  travelConnectionColors: { [key: string]: string };
 }
 
 export const MapLegend = (props: MapLegendPropsType) => {
-  const { bsmColors, laneColors } = props;
+  const { bsmColors, laneColors, travelConnectionColors } = props;
 
   const bsmColorsList: JSX.Element[] = [];
   for (const [key, value] of Object.entries(bsmColors)) {
     bsmColorsList.push(
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-        <div>{key}: </div>
-        <div style={{ height: 20, width: 20, backgroundColor: value, marginLeft: "3px" }}></div>
-      </div>
+      <>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            marginLeft: 5,
+            marginRight: 10,
+            minWidth: 110,
+          }}
+        >
+          <div>{key}: </div>
+          <div style={{ height: 20, width: 20, backgroundColor: value, marginLeft: "auto" }}></div>
+        </div>
+        <p>|</p>
+      </>
+    );
+    console.log(key, value);
+  }
+
+  const travelConnectionColorsList: JSX.Element[] = [];
+  for (const [key, value] of Object.entries(travelConnectionColors)) {
+    travelConnectionColorsList.push(
+      <>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            marginLeft: 5,
+            marginRight: 10,
+            minWidth: 110,
+          }}
+        >
+          <div>{key}: </div>
+          <div style={{ height: 20, width: 20, backgroundColor: value, marginLeft: "auto" }}></div>
+        </div>
+        <p>|</p>
+      </>
     );
     console.log(key, value);
   }
@@ -34,10 +70,22 @@ export const MapLegend = (props: MapLegendPropsType) => {
   const laneColorsList: JSX.Element[] = [];
   for (const [key, value] of Object.entries(laneColors)) {
     laneColorsList.push(
-      <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-        <div>{key}: </div>
-        <div style={{ height: 20, width: 20, backgroundColor: value, marginLeft: "3px" }}></div>
-      </div>
+      <>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            marginLeft: 5,
+            marginRight: 10,
+            minWidth: 110,
+          }}
+        >
+          <div>{key}: </div>
+          <div style={{ height: 20, width: 20, backgroundColor: value, marginLeft: "auto" }}></div>
+        </div>
+        <p>|</p>
+      </>
     );
     console.log(key, value);
   }
@@ -49,19 +97,28 @@ export const MapLegend = (props: MapLegendPropsType) => {
           </Tooltip> */}
 
       <div style={{ display: "flex", flexDirection: "row" }}>
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-          <div>BSM Colors: </div>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10, minWidth: 140 }}>
+          <div>Lane Colors: </div>
         </div>
-        {bsmColorsList}
+        {laneColorsList}
       </div>
 
       <Divider sx={{ borderRadius: 1 }} />
 
       <div style={{ display: "flex", flexDirection: "row" }}>
-        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10 }}>
-          <div>Lane Colors: </div>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10, minWidth: 140 }}>
+          <div>Travel Connections: </div>
         </div>
-        {laneColorsList}
+        {travelConnectionColorsList}
+      </div>
+
+      <Divider sx={{ borderRadius: 1 }} />
+
+      <div style={{ display: "flex", flexDirection: "row" }}>
+        <div style={{ display: "flex", flexDirection: "row", alignItems: "center", marginRight: 10, minWidth: 140 }}>
+          <div>BSM Colors: </div>
+        </div>
+        {bsmColorsList}
       </div>
     </Paper>
   );

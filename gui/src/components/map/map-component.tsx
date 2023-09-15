@@ -205,13 +205,18 @@ const MapTab = (props: MyProps) => {
   const [mapLegendColors, setMapLegendColors] = useState<{
     bsmColors: { [key: string]: string };
     laneColors: { [key: string]: string };
+    travelConnectionColors: { [key: string]: string };
   }>({
     bsmColors: { Other: "#0004ff" },
     laneColors: {
+      Ingress: "#0004ff",
+      Egress: "#eb34e8",
+    },
+    travelConnectionColors: {
       Green: "#30af25",
       Yellow: "#c5b800",
       Red: "#da2f2f",
-      "No SPAT": "#000000",
+      "No SPAT/Unknown": "#000000",
     },
   });
 
@@ -437,14 +442,15 @@ const MapTab = (props: MyProps) => {
   const filterConnections = (
     connectingLanes: ConnectingLanesFeatureCollection,
     signalGroups: SpatSignalGroup[],
-    state: SignalState | null
+    states: SignalState[]
   ): ConnectingLanesFeatureCollection => {
     return {
       ...connectingLanes,
       features: connectingLanes.features.filter((feature) => {
         const val: boolean =
           signalGroups.find(
-            (signalGroup) => signalGroup.signalGroup == feature.properties.signalGroupId && signalGroup.state != state
+            (signalGroup) =>
+              signalGroup.signalGroup == feature.properties.signalGroupId && states.includes(signalGroup.state)
           ) !== undefined;
         return !val;
       }),
@@ -741,7 +747,11 @@ const MapTab = (props: MyProps) => {
           }}
         >
           <Box style={{ position: "relative" }}>
-            <MapLegend bsmColors={mapLegendColors.bsmColors} laneColors={mapLegendColors.laneColors} />
+            <MapLegend
+              bsmColors={mapLegendColors.bsmColors}
+              laneColors={mapLegendColors.laneColors}
+              travelConnectionColors={mapLegendColors.travelConnectionColors}
+            />
           </Box>
         </div>
 
@@ -780,7 +790,7 @@ const MapTab = (props: MyProps) => {
           {connectingLanes && currentSignalGroups && (
             <Source
               type="geojson"
-              data={filterConnections(connectingLanes, currentSignalGroups, "PROTECTED_MOVEMENT_ALLOWED")}
+              data={filterConnections(connectingLanes, currentSignalGroups, ["PROTECTED_MOVEMENT_ALLOWED"])}
             >
               <Layer {...connectingLanesLayer} />
             </Source>
@@ -788,18 +798,28 @@ const MapTab = (props: MyProps) => {
           {connectingLanes && currentSignalGroups && (
             <Source
               type="geojson"
-              data={filterConnections(connectingLanes, currentSignalGroups, "PROTECTED_CLEARANCE")}
+              data={filterConnections(connectingLanes, currentSignalGroups, [
+                "PROTECTED_CLEARANCE",
+                "PRE_MOVEMENT",
+                "PERMISSIVE_MOVEMENT_ALLOWED",
+                "PERMISSIVE_CLEARANCE",
+                "STOP_THEN_PROCEED",
+                "CAUTION_CONFLICTING_TRAFFIC",
+              ])}
             >
               <Layer {...connectingLanesLayerYellow} />
             </Source>
           )}
           {connectingLanes && currentSignalGroups && (
-            <Source type="geojson" data={filterConnections(connectingLanes, currentSignalGroups, "STOP_AND_REMAIN")}>
+            <Source type="geojson" data={filterConnections(connectingLanes, currentSignalGroups, ["STOP_AND_REMAIN"])}>
               <Layer {...connectingLanesLayerInactive} />
             </Source>
           )}
           {connectingLanes && currentSignalGroups && (
-            <Source type="geojson" data={filterConnections(connectingLanes, currentSignalGroups, null)!}>
+            <Source
+              type="geojson"
+              data={filterConnections(connectingLanes, currentSignalGroups, [null, "UNAVAILABLE", "DARK"])!}
+            >
               <Layer {...connectingLanesLayerMissing} />
             </Source>
           )}

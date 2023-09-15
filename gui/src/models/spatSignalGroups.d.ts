@@ -7,7 +7,18 @@ type SpatSignalGroup = {
   state: SignalState;
 };
 
-type SignalState = "STOP_AND_REMAIN" | "PROTECTED_CLEARANCE" | "PROTECTED_MOVEMENT_ALLOWED";
+type SignalState =
+  | null
+  | "UNAVAILABLE"
+  | "DARK"
+  | "STOP_THEN_PROCEED"
+  | "STOP_AND_REMAIN"
+  | "PRE_MOVEMENT"
+  | "PERMISSIVE_MOVEMENT_ALLOWED"
+  | "PROTECTED_MOVEMENT_ALLOWED"
+  | "PERMISSIVE_CLEARANCE"
+  | "PROTECTED_CLEARANCE"
+  | "CAUTION_CONFLICTING_TRAFFIC";
 
 type SignalStateFeatureCollection = {
   type: "FeatureCollection";
