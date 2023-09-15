@@ -41,7 +41,6 @@ export const MapLegend = (props: MapLegendPropsType) => {
         <p>|</p>
       </>
     );
-    console.log(key, value);
   }
 
   const travelConnectionColorsList: JSX.Element[] = [];
@@ -64,7 +63,6 @@ export const MapLegend = (props: MapLegendPropsType) => {
         <p>|</p>
       </>
     );
-    console.log(key, value);
   }
 
   const laneColorsList: JSX.Element[] = [];
@@ -87,7 +85,6 @@ export const MapLegend = (props: MapLegendPropsType) => {
         <p>|</p>
       </>
     );
-    console.log(key, value);
   }
 
   return (

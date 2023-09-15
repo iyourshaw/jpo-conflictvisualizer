@@ -10,7 +10,6 @@ import type { CircleLayer, LayerProps, LineLayer } from "react-map-gl";
 import ControlPanel from "./control-panel";
 import MessageMonitorApi from "../../apis/mm-api";
 import { useDashboardContext } from "../../contexts/dashboard-context";
-import { Marker } from "mapbox-gl";
 import { SidePanel } from "./side-panel";
 import { CustomPopup } from "./popup";
 import { useSession } from "next-auth/react";
@@ -41,61 +40,36 @@ const mapMessageLayer: LineLayer = {
   },
 };
 
-const mapMessageHighlightLayer: LineLayer = {
-  id: "mapMessageHighlight",
-  type: "line",
-  paint: {
-    "line-width": 5,
-    "line-color": "#fffc50",
-  },
-};
-
 const connectingLanesLayer: LineLayer = {
   id: "connectingLanes",
   type: "line",
   paint: {
     "line-width": 5,
-    "line-color": "#30af25",
-    "line-dasharray": [2, 1],
-  },
-};
-
-const connectingLanesLayerYellow: LineLayer = {
-  id: "connectingLanesYellow",
-  type: "line",
-  paint: {
-    "line-width": 5,
-    "line-color": "#c5b800",
-    "line-dasharray": [2, 1],
-  },
-};
-
-const connectingLanesLayerInactive: LineLayer = {
-  id: "connectingLanesInactive",
-  type: "line",
-  paint: {
-    "line-width": 5,
-    "line-color": "#da2f2f",
-    "line-dasharray": [2, 1],
-  },
-};
-
-const connectingLanesLayerMissing: LineLayer = {
-  id: "connectingLanesMissing",
-  type: "line",
-  paint: {
-    "line-width": 5,
-    "line-color": "#000000",
-    "line-dasharray": [2, 1],
-  },
-};
-
-const connectingLanesHighlightLayer: LineLayer = {
-  id: "connectingLanesHighlight",
-  type: "line",
-  paint: {
-    "line-width": 5,
-    "line-color": "#fffc50",
+    "line-color": [
+      "match",
+      ["get", "signalState"],
+      "UNAVAILABLE",
+      "#000000",
+      "DARK",
+      "#3a3a3a",
+      "STOP_THEN_PROCEED",
+      "#990000",
+      "STOP_AND_REMAIN",
+      "#ff0000",
+      "PRE_MOVEMENT",
+      "#254416",
+      "PERMISSIVE_MOVEMENT_ALLOWED",
+      "#267402",
+      "PROTECTED_MOVEMENT_ALLOWED",
+      "#30af25",
+      "PERMISSIVE_CLEARANCE",
+      "#ffc400",
+      "PROTECTED_CLEARANCE",
+      "#e5ff00",
+      "CAUTION_CONFLICTING_TRAFFIC",
+      "#ad7f00",
+      "#000000",
+    ],
     "line-dasharray": [2, 1],
   },
 };
@@ -131,6 +105,15 @@ const signalStateLayerYellow: LayerProps = {
     "icon-image": "traffic-light-icon-yellow-1",
     "icon-allow-overlap": true,
     "icon-size": ["interpolate", ["linear"], ["zoom"], 0, 0, 6, 0.5, 9, 0.4, 22, 0.08],
+  },
+};
+
+const pulsingDotLayer: LayerProps = {
+  id: "layer-with-pulsing-dot",
+  type: "symbol",
+  source: "dot-point",
+  layout: {
+    "icon-image": "pulsing-dot",
   },
 };
 
@@ -224,7 +207,7 @@ const MapTab = (props: MyProps) => {
     id: "bsm",
     type: "circle",
     paint: {
-      "circle-color": ["match", ["get", "id"], "#0004ff"],
+      "circle-color": ["match", ["get", "id"], "temp-id", "#0004ff", "#0004ff"],
       "circle-radius": 8,
     },
   });
@@ -258,15 +241,9 @@ const MapTab = (props: MyProps) => {
   const [rawData, setRawData] = useState({});
   const { data: session } = useSession();
 
-  useEffect(() => {
-    console.debug("SELECTED FEATURE", selectedFeature);
-  }, [selectedFeature]);
-
   const parseMapSignalGroups = (mapMessage: ProcessedMap): SignalStateFeatureCollection => {
     const features: SignalStateFeature[] = [];
 
-    console.log("Map Message");
-    console.log(mapMessage);
     mapMessage?.mapFeatureCollection?.features?.forEach((mapFeature: MapFeature) => {
       if (!mapFeature.properties.ingressApproach || !mapFeature?.properties?.connectsTo?.[0]?.signalGroup) {
         return;
@@ -290,6 +267,69 @@ const MapTab = (props: MyProps) => {
       features: features,
     };
   };
+
+  //   const size = 200;
+  //   const context: CanvasRenderingContext2D | null = null;
+
+  //   const pulsingDot: {
+  //     width: number;
+  //     height: number;
+  //     data: Uint8Array | Uint8ClampedArray;
+  //     context: CanvasRenderingContext2D | null;
+  //     onAdd: () => void;
+  //     render: () => boolean;
+  //   } = {
+  //     width: size,
+  //     height: size,
+  //     data: new Uint8Array(size * size * 4),
+  //     context: context,
+
+  //     // When the layer is added to the map,
+  //     // get the rendering context for the map canvas.
+  //     onAdd: function () {
+  //       const canvas = document.createElement("canvas");
+  //       canvas.width = this.width;
+  //       canvas.height = this.height;
+  //       this.context = canvas.getContext("2d");
+  //     },
+
+  //     // Call once before every frame where the icon will be used.
+  //     render: function () {
+  //       const duration = 1000;
+  //       const t = (performance.now() % duration) / duration;
+
+  //       const radius = (size / 2) * 0.3;
+  //       const outerRadius = (size / 2) * 0.7 * t + radius;
+  //       const context = this.context;
+  //       if (context != null) {
+  //         // Draw the outer circle.
+  //         context.clearRect(0, 0, this.width, this.height);
+  //         context.beginPath();
+  //         context.arc(this.width / 2, this.height / 2, outerRadius, 0, Math.PI * 2);
+  //         context.fillStyle = `rgba(255, 200, 200, ${1 - t})`;
+  //         context.fill();
+
+  //         // Draw the inner circle.
+  //         context.beginPath();
+  //         context.arc(this.width / 2, this.height / 2, radius, 0, Math.PI * 2);
+  //         context.fillStyle = "rgba(255, 100, 100, 1)";
+  //         context.strokeStyle = "white";
+  //         context.lineWidth = 2 + 4 * (1 - t);
+  //         context.fill();
+  //         context.stroke();
+
+  //         // Update this image's data with data from the canvas.
+  //         this.data = context.getImageData(0, 0, this.width, this.height).data;
+
+  //         // Continuously repaint the map, resulting
+  //         // in the smooth animation of the dot.
+  //         mapRef.current.triggerRepaint();
+  //       }
+
+  //       // Return `true` to let the map know that the image was updated.
+  //       return true;
+  //     },
+  //   };
 
   const createMarkerForNotification = (
     center: number[],
@@ -397,6 +437,11 @@ const MapTab = (props: MyProps) => {
       case "STOP_AND_REMAIN":
         return RED_LIGHT; // red
       case "PROTECTED_CLEARANCE":
+      case "STOP_AND_REMAIN":
+      case "PRE_MOVEMENT":
+      case "PERMISSIVE_MOVEMENT_ALLOWED":
+      case "PERMISSIVE_CLEARANCE":
+      case "CAUTION_CONFLICTING_TRAFFIC":
         return YELLOW_LIGHT; // yellow
       case "PROTECTED_MOVEMENT_ALLOWED":
         return GREEN_LIGHT; // green
@@ -419,8 +464,6 @@ const MapTab = (props: MyProps) => {
   };
 
   const parseBsmToGeojson = (bsmData: OdeBsmData[]): BsmFeatureCollection => {
-    console.debug("Ode Bsm Data");
-    console.debug(bsmData);
     return {
       type: "FeatureCollection" as "FeatureCollection",
       features: bsmData.map((bsm) => {
@@ -439,21 +482,20 @@ const MapTab = (props: MyProps) => {
     };
   };
 
-  const filterConnections = (
+  const addConnections = (
     connectingLanes: ConnectingLanesFeatureCollection,
-    signalGroups: SpatSignalGroup[],
-    states: SignalState[]
+    signalGroups: SpatSignalGroup[]
   ): ConnectingLanesFeatureCollection => {
     return {
       ...connectingLanes,
-      features: connectingLanes.features.filter((feature) => {
-        const val: boolean =
-          signalGroups.find(
-            (signalGroup) =>
-              signalGroup.signalGroup == feature.properties.signalGroupId && states.includes(signalGroup.state)
-          ) !== undefined;
-        return !val;
-      }),
+      features: connectingLanes.features.map((feature) => ({
+        ...feature,
+        properties: {
+          ...feature.properties,
+          signalState: signalGroups.find((signalGroup) => signalGroup.signalGroup == feature.properties.signalGroupId)
+            ?.state,
+        },
+      })),
     };
   };
 
@@ -533,7 +575,6 @@ const MapTab = (props: MyProps) => {
     });
     const bsmGeojson = parseBsmToGeojson(rawBsm);
     const uniqueIds = new Set(bsmGeojson.features.map((bsm) => bsm.properties?.id));
-    console.log("BSM Data Unique IDs", uniqueIds);
     // generate equally spaced unique colors for each uniqueId
     const colors = generateColorDictionary(uniqueIds);
     setMapLegendColors((prevValue) => ({
@@ -542,13 +583,10 @@ const MapTab = (props: MyProps) => {
     }));
     // add color to each feature
     const bsmLayerStyle = generateMapboxStyleExpression(colors);
-    console.log("BSM Data", bsmLayerStyle);
     setBsmLayerStyle((prevValue) => {
       prevValue.paint!["circle-color"] = bsmLayerStyle;
       return prevValue;
     });
-    console.debug("SETTING BSM LAYER STYLE");
-    console.debug("SETTING BSM GEOJSON", bsmGeojson);
     setBsmData(bsmGeojson);
 
     setSliderValue(
@@ -614,8 +652,6 @@ const MapTab = (props: MyProps) => {
         filteredBsms.push(feature);
       }
     });
-    console.debug(performance.now() - start);
-    console.debug("SETTING CURRENT BSMs");
 
     setCurrentBsms({ ...bsmData, features: filteredBsms });
   }, [mapSignalGroups, renderTimeInterval, spatSignalGroups]);
@@ -686,7 +722,6 @@ const MapTab = (props: MyProps) => {
     const features = mapRef.current.queryRenderedFeatures(e.point, {
       //   layers: allInteractiveLayerIds,
     });
-    console.debug("CLICKED", features, e);
 
     const feature = features?.[0];
     if (feature && allInteractiveLayerIds.includes(feature.layer.id)) {
@@ -758,15 +793,9 @@ const MapTab = (props: MyProps) => {
         <Map
           {...viewState}
           ref={mapRef}
-          onLoad={() => {
-            // const image = new Image(35, 35);
-            // image.src = "./icons/traffic-light-green.svg";
-            // mapRef.current.addImage("traffic_light_icon_green", image);
-            // mapRef.current.loadImage(traffic_light_icon_green, (error, image) => {
-            //   if (error) throw error;
-            // });
-          }}
-          //   mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
+          //   onLoad={() => {
+          //     mapRef.current.addImage("pulsing-dot", pulsingDot, { pixelRatio: 2 });
+          //   }}
           mapStyle="mapbox://styles/tonyenglish/cld2bdrk3000201qmx2jb95kf"
           mapboxAccessToken={MAPBOX_API_TOKEN}
           attributionControl={true}
@@ -775,52 +804,10 @@ const MapTab = (props: MyProps) => {
           style={{ width: "100%", height: "100%" }}
           onMove={(evt) => setViewState(evt.viewState)}
           onClick={onClickMap}
-          // onMouseDown={this.onMouseDown}
-          // onMouseUp={this.onMouseUp}
-          // interactiveLayerIds={interactiveLayerIds}
-          // cursor={cursor}
-          // onMouseEnter={() => this.setState({ cursor: "pointer" })}
-          // onMouseLeave={() => this.setState({ cursor: "grab" })}
         >
-          {/* {mapData && (
-            <Source type="geojson" data={mapData?.connectingLanesFeatureCollection}>
+          {connectingLanes && currentSignalGroups && (
+            <Source type="geojson" data={addConnections(connectingLanes, currentSignalGroups)}>
               <Layer {...connectingLanesLayer} />
-            </Source>
-          )} */}
-          {connectingLanes && currentSignalGroups && (
-            <Source
-              type="geojson"
-              data={filterConnections(connectingLanes, currentSignalGroups, ["PROTECTED_MOVEMENT_ALLOWED"])}
-            >
-              <Layer {...connectingLanesLayer} />
-            </Source>
-          )}
-          {connectingLanes && currentSignalGroups && (
-            <Source
-              type="geojson"
-              data={filterConnections(connectingLanes, currentSignalGroups, [
-                "PROTECTED_CLEARANCE",
-                "PRE_MOVEMENT",
-                "PERMISSIVE_MOVEMENT_ALLOWED",
-                "PERMISSIVE_CLEARANCE",
-                "STOP_THEN_PROCEED",
-                "CAUTION_CONFLICTING_TRAFFIC",
-              ])}
-            >
-              <Layer {...connectingLanesLayerYellow} />
-            </Source>
-          )}
-          {connectingLanes && currentSignalGroups && (
-            <Source type="geojson" data={filterConnections(connectingLanes, currentSignalGroups, ["STOP_AND_REMAIN"])}>
-              <Layer {...connectingLanesLayerInactive} />
-            </Source>
-          )}
-          {connectingLanes && currentSignalGroups && (
-            <Source
-              type="geojson"
-              data={filterConnections(connectingLanes, currentSignalGroups, [null, "UNAVAILABLE", "DARK"])!}
-            >
-              <Layer {...connectingLanesLayerMissing} />
             </Source>
           )}
           {currentBsms && (
@@ -833,6 +820,26 @@ const MapTab = (props: MyProps) => {
               <Layer {...mapMessageLayer} />
             </Source>
           )}
+          {/* {
+            <Source
+              type="geojson"
+              data={{
+                type: "FeatureCollection",
+                features: [
+                  {
+                    type: "Feature",
+                    properties: {},
+                    geometry: {
+                      type: "Point",
+                      coordinates: [0, 0],
+                    },
+                  },
+                ],
+              }}
+            >
+              <Layer {...pulsingDotLayer} />
+            </Source>
+          } */}
           {connectingLanes && currentSignalGroups && signalStateData && (
             <Source type="geojson" data={signalStateData[0]}>
               <Layer {...signalStateLayerRed} />
